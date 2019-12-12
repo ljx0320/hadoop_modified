@@ -464,9 +464,12 @@ public abstract class FileSystem extends Configured implements Closeable {
     String disableCacheName = String.format("fs.%s.impl.disable.cache", scheme);
     if (conf.getBoolean(disableCacheName, false)) {
       LOGGER.debug("Bypassing cache to create filesystem {}", uri);
+      System.out.println("create file system in 467 of FileSystem.java");
+      System.out.println(uri.toString());
       return createFileSystem(uri, conf);
     }
-
+    System.out.println(uri.toString());
+    System.out.println("CACHE get in 472 of FileSystem.java");
     return CACHE.get(uri, conf);
   }
 

@@ -35,12 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -263,12 +258,12 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    * @deprecated Deprecated at 0.21
    */
   @Deprecated
-  public DFSClient(Configuration conf) throws IOException {
+  public DFSClient(Configuration conf) throws IOException, URISyntaxException {
     this(DFSUtilClient.getNNAddress(conf), conf);
   }
 
   public DFSClient(InetSocketAddress address, Configuration conf)
-      throws IOException {
+      throws IOException, URISyntaxException {
     this(DFSUtilClient.getNNUri(address), conf);
   }
 
@@ -276,7 +271,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    * Same as this(nameNodeUri, conf, null);
    * @see #DFSClient(URI, Configuration, FileSystem.Statistics)
    */
-  public DFSClient(URI nameNodeUri, Configuration conf) throws IOException {
+  public DFSClient(URI nameNodeUri, Configuration conf) throws IOException, URISyntaxException {
     this(nameNodeUri, conf, null);
   }
 
@@ -299,7 +294,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    */
   @VisibleForTesting
   public DFSClient(URI nameNodeUri, ClientProtocol rpcNamenode,
-      Configuration conf, FileSystem.Statistics stats) throws IOException {
+      Configuration conf, FileSystem.Statistics stats) throws IOException{
     // Copy only the required DFSClient configuration
     this.tracer = FsTracer.get(conf);
     this.dfsClientConf = new DfsClientConf(conf);
@@ -354,6 +349,14 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
           "null URI");
       proxyInfo = NameNodeProxiesClient.createProxyWithClientProtocol(conf,
           nameNodeUri, nnFallbackToSimpleAuth);
+      // create proxyInfo for client
+      // not sure what conf and nameNodeUri is
+      URI myUri = URI.create("hdfs://localhost:9001");
+      System.out.println("355 of DFSClient.java");
+      System.out.println(myUri.toString());
+      ProxyAndInfo<ClientProtocol> clientProxyInfo = NameNodeProxiesClient.createProxyWithClientProtocol(conf,
+              myUri, nnFallbackToSimpleAuth);
+      this.clientnode = clientProxyInfo.getProxy();
       this.dtService = proxyInfo.getDelegationTokenService();
       this.namenode = proxyInfo.getProxy();
     }
@@ -647,6 +650,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    */
   public long getBlockSize(String f) throws IOException {
     try (TraceScope ignored = newPathTraceScope("getBlockSize", f)) {
+      System.out.println("653 of DFSClient.java");
       return namenode.getPreferredBlockSize(f);
     } catch (IOException ie) {
       LOG.warn("Problem getting block size", ie);
@@ -662,6 +666,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     long now = Time.monotonicNow();
     if ((serverDefaults == null) ||
         (now - serverDefaultsLastUpdate > serverDefaultsValidityPeriod)) {
+      System.out.println("669 of DFSClient.java");
       serverDefaults = namenode.getServerDefaults();
       serverDefaultsLastUpdate = now;
     }
@@ -686,6 +691,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       throws IOException {
     assert dtService != null;
     try (TraceScope ignored = tracer.newScope("getDelegationToken")) {
+      System.out.println("694 of DFSClient.java");
       Token<DelegationTokenIdentifier> token =
           namenode.getDelegationToken(renewer);
       if (token != null) {
@@ -848,6 +854,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       String src, long start, long length)
       throws IOException {
     try {
+      System.out.println("857 of DFSClient.java");
       return namenode.getBlockLocations(src, start, length);
     } catch(RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -1300,6 +1307,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public String getLinkTarget(String path) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getLinkTarget", path)) {
+      System.out.println("1310 of DFSClient.java");
       return namenode.getLinkTarget(path);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -1479,6 +1487,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public BlockStoragePolicy getStoragePolicy(String path) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getStoragePolicy", path)) {
+      System.out.println("1490 of DFSClient.java");
       return namenode.getStoragePolicy(path);
     } catch (RemoteException e) {
       throw e.unwrapRemoteException(AccessControlException.class,
@@ -1493,6 +1502,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    */
   public BlockStoragePolicy[] getStoragePolicies() throws IOException {
     try (TraceScope ignored = tracer.newScope("getStoragePolicies")) {
+      System.out.println("1505 of DFSClient.java");
       return namenode.getStoragePolicies();
     }
   }
@@ -1632,6 +1642,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       boolean needLocation) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("listPaths", src)) {
+      System.out.println("1645 of DFSClient.java");
       return namenode.getListing(src, startAfter, needLocation);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -1651,7 +1662,9 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public HdfsFileStatus getFileInfo(String src) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getFileInfo", src)) {
-      return namenode.getFileInfo(src);
+      System.out.println("1665 of DFSClient.java");
+      return clientnode.getFileInfo(src);
+      //return namenode.getFileInfo(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
           FileNotFoundException.class,
@@ -1685,6 +1698,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public HdfsFileStatus getFileLinkInfo(String src) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getFileLinkInfo", src)) {
+      System.out.println("1701 of DFSClient.java");
       return namenode.getFileLinkInfo(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -1717,6 +1731,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
         if (encryptionKey == null ||
             encryptionKey.expiryDate < Time.now()) {
           LOG.debug("Getting new encryption token from NN");
+          System.out.println("1734 of DFSClient.java");
           encryptionKey = namenode.getDataEncryptionKey();
         }
         return encryptionKey;
@@ -2022,6 +2037,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   private long getStateByIndex(int stateIndex) throws IOException {
     checkOpen();
     try (TraceScope ignored = tracer.newScope("getStats")) {
+      System.out.println("2040 of DFSClient.java");
       long[] states =  namenode.getStats();
       return states.length > stateIndex ? states[stateIndex] : -1;
     }
@@ -2110,6 +2126,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       throws IOException {
     checkOpen();
     try (TraceScope ignored = tracer.newScope("datanodeReport")) {
+      System.out.println("2129 of DFSClient.java");
       return namenode.getDatanodeReport(type);
     }
   }
@@ -2118,6 +2135,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       DatanodeReportType type) throws IOException {
     checkOpen();
     try (TraceScope ignored = tracer.newScope("datanodeStorageReport")) {
+      System.out.println("2138 of DFSClient.java");
       return namenode.getDatanodeStorageReport(type);
     }
   }
@@ -2214,6 +2232,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       throws IOException {
     checkOpen();
     try (TraceScope ignored = tracer.newScope("getSnapshottableDirListing")) {
+      System.out.println("2235 of DFSClient.java");
       return namenode.getSnapshottableDirListing();
     } catch (RemoteException re) {
       throw re.unwrapRemoteException();
@@ -2257,6 +2276,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       String fromSnapshot, String toSnapshot) throws IOException {
     checkOpen();
     try (TraceScope ignored = tracer.newScope("getSnapshotDiffReport")) {
+      System.out.println("2279 of DFSClient.java");
       return namenode.getSnapshotDiffReport(snapshotDir,
           fromSnapshot, toSnapshot);
     } catch (RemoteException re) {
@@ -2498,6 +2518,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    */
   ContentSummary getContentSummary(String src) throws IOException {
     try (TraceScope ignored = newPathTraceScope("getContentSummary", src)) {
+      System.out.println("2521 of DFSClient.java");
       return namenode.getContentSummary(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -2515,6 +2536,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   QuotaUsage getQuotaUsage(String src) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getQuotaUsage", src)) {
+      System.out.println("2539 of DFSClient.java");
       return namenode.getQuotaUsage(src);
     } catch(RemoteException re) {
       IOException ioe = re.unwrapRemoteException(AccessControlException.class,
@@ -2733,6 +2755,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public AclStatus getAclStatus(String src) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getAclStatus", src)) {
+      System.out.println("2758 of DFSClient.java");
       return namenode.getAclStatus(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -2757,6 +2780,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public EncryptionZone getEZForPath(String src) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getEZForPath", src)) {
+      System.out.println("2783 of DFSClient.java");
       return namenode.getEZForPath(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -2789,6 +2813,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getXAttr", src)) {
       final List<XAttr> xAttrs = XAttrHelper.buildXAttrAsList(name);
+      System.out.println("2816 of DFSClient.java");
       final List<XAttr> result = namenode.getXAttrs(src, xAttrs);
       return XAttrHelper.getFirstXAttrValue(result);
     } catch (RemoteException re) {
@@ -2801,6 +2826,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public Map<String, byte[]> getXAttrs(String src) throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getXAttrs", src)) {
+      System.out.println("2829 of DFSClient.java");
       return XAttrHelper.buildXAttrMap(namenode.getXAttrs(src, null));
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
@@ -2813,6 +2839,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       throws IOException {
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("getXAttrs", src)) {
+      System.out.println("2842 of DFSClient.java");
       return XAttrHelper.buildXAttrMap(namenode.getXAttrs(
           src, XAttrHelper.buildXAttrs(names)));
     } catch (RemoteException re) {
