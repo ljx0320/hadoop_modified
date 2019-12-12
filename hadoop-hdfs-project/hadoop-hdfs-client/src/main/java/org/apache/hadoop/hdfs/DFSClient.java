@@ -354,11 +354,13 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
       URI myUri = URI.create("hdfs://localhost:9001");
       System.out.println("355 of DFSClient.java");
       System.out.println(myUri.toString());
-      ProxyAndInfo<ClientProtocol> clientProxyInfo = NameNodeProxiesClient.createProxyWithClientProtocol(conf,
+      System.out.println("357 of DFSClient.java");
+        ProxyAndInfo<ClientProtocol> clientProxyInfo = NameNodeProxiesClient.createProxyWithClientProtocol(conf,
               myUri, nnFallbackToSimpleAuth);
       this.clientnode = clientProxyInfo.getProxy();
       this.dtService = proxyInfo.getDelegationTokenService();
       this.namenode = proxyInfo.getProxy();
+      System.out.println("362 of DFSClient.java");
     }
 
     String localInterfaces[] =
@@ -395,6 +397,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     this.saslClient = new SaslDataTransferClient(
         conf, DataTransferSaslUtil.getSaslPropertiesResolver(conf),
         TrustedChannelResolver.getInstance(conf), nnFallbackToSimpleAuth);
+    System.out.println("398 of DFSClient.java");
   }
 
   /**
