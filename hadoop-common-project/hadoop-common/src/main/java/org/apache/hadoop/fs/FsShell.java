@@ -19,6 +19,8 @@ package org.apache.hadoop.fs;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.sql.Timestamp;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -371,6 +373,8 @@ public class FsShell extends Configured implements Tool {
    * @throws Exception upon error
    */
   public static void main(String argv[]) throws Exception {
+    Timestamp startTimestamp = new Timestamp(System.currentTimeMillis());
+    System.out.println("start timestamp " + startTimestamp);
     FsShell shell = newShellInstance();
     Configuration conf = new Configuration();
     conf.setQuietMode(false);
@@ -381,6 +385,19 @@ public class FsShell extends Configured implements Tool {
     } finally {
       shell.close();
     }
+    Timestamp endTimestamp = new Timestamp(System.currentTimeMillis());
+    System.out.println("end timestamp " + endTimestamp);
+
+    String startTimeStr = startTimestamp.toString() + "\n";
+    String endTimeStr = endTimestamp.toString() + "\n";
+    File f = new File("timestamp.txt");
+    f.createNewFile(); // if file already exists will do nothing
+    FileOutputStream outputFile = new FileOutputStream(f, true);
+    byte[] strToBytes = startTimeStr.getBytes();
+    outputFile.write(strToBytes);
+    strToBytes = endTimeStr.getBytes();
+    outputFile.write(strToBytes);
+    outputFile.close();
     System.exit(res);
   }
 
