@@ -1646,7 +1646,8 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     checkOpen();
     try (TraceScope ignored = newPathTraceScope("listPaths", src)) {
       System.out.println("1645 of DFSClient.java");
-      return namenode.getListing(src, startAfter, needLocation);
+      // return namenode.getListing(src, startAfter, needLocation);
+      return clientnode.getListing(src, startAfter, needLocation);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
           FileNotFoundException.class,
@@ -1667,7 +1668,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     try (TraceScope ignored = newPathTraceScope("getFileInfo", src)) {
       System.out.println("1665 of DFSClient.java");
       return clientnode.getFileInfo(src);
-      //return namenode.getFileInfo(src);
+      // return namenode.getFileInfo(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
           FileNotFoundException.class,
@@ -1703,6 +1704,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     try (TraceScope ignored = newPathTraceScope("getFileLinkInfo", src)) {
       System.out.println("1701 of DFSClient.java");
       return namenode.getFileLinkInfo(src);
+      // return clientnode.getFileLinkInfo(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
           UnresolvedPathException.class);
@@ -2042,6 +2044,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     try (TraceScope ignored = tracer.newScope("getStats")) {
       System.out.println("2040 of DFSClient.java");
       long[] states =  namenode.getStats();
+      // long[] states =  clientnode.getStats();
       return states.length > stateIndex ? states[stateIndex] : -1;
     }
   }
@@ -2523,6 +2526,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
     try (TraceScope ignored = newPathTraceScope("getContentSummary", src)) {
       System.out.println("2521 of DFSClient.java");
       return namenode.getContentSummary(src);
+      // return clientnode.getContentSummary(src);
     } catch (RemoteException re) {
       throw re.unwrapRemoteException(AccessControlException.class,
           FileNotFoundException.class,
