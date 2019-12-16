@@ -1,6 +1,6 @@
 Environment and necessary tools: Linux 18.04, java 1.8, maven, protobuf 2.5(must be this version)
 
-In addition to this repo, you should also download the newClient source code: https://github.com/ljx0320/591_final_project
+In addition to this repo, you should also download the newClient source code: https://github.com/ljx0320/591_newClient
 
 Step 1: compile the hadoop project. This may take around 20 minutes:
 mvn package -Pdist -Pdoc -Psrc -DskipTests
@@ -35,7 +35,7 @@ core-site.xml:
 Step 3: format the dfs:
 bin/hadoop namenode -format
 
-Step 4: Now refer to README.MD for newClient: https://github.com/ljx0320/591_final_project/blob/master/README.md
+Step 4: refer to README for newClient: https://github.com/ljx0320/591_newClient/blob/master/README.md
 
 Step 5: After you run the client proxy up, run name node and data node:
 sbin/hadoop-daemon.sh --script bin/hdfs start namenode
