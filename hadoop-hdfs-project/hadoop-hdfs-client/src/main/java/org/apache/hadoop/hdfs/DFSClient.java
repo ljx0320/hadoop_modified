@@ -258,12 +258,12 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    * @deprecated Deprecated at 0.21
    */
   @Deprecated
-  public DFSClient(Configuration conf) throws IOException, URISyntaxException {
+  public DFSClient(Configuration conf) throws IOException {
     this(DFSUtilClient.getNNAddress(conf), conf);
   }
 
   public DFSClient(InetSocketAddress address, Configuration conf)
-      throws IOException, URISyntaxException {
+      throws IOException {
     this(DFSUtilClient.getNNUri(address), conf);
   }
 
@@ -271,7 +271,7 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
    * Same as this(nameNodeUri, conf, null);
    * @see #DFSClient(URI, Configuration, FileSystem.Statistics)
    */
-  public DFSClient(URI nameNodeUri, Configuration conf) throws IOException, URISyntaxException {
+  public DFSClient(URI nameNodeUri, Configuration conf) throws IOException {
     this(nameNodeUri, conf, null);
   }
 
